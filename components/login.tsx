@@ -3,18 +3,18 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingVi
 import { router } from 'expo-router';
 import { Mail, ArrowRight } from 'lucide-react-native';
 
-export default function LoginScreen() {
+export default function LoginScreen({ onLogin }) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email.trim()) return;
-    
+
     setIsLoading(true);
-    
+
     setTimeout(() => {
       setIsLoading(false);
-      router.replace('/(tabs)');
+      if (onLogin) onLogin(); // Notify parent to proceed to app
     }, 1500);
   };
 
