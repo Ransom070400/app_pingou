@@ -1,137 +1,101 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
-import { CircleCheck as CheckCircle, Trophy, Sparkles } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
 export default function SuccessAnimation({ onComplete, connectionData }) {
+  // Animation values
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const confettiAnim = useRef(new Animated.Value(0)).current;
-  const sparkleAnim = useRef(new Animated.Value(0)).current;
+  const penguinBounce = useRef(new Animated.Value(0)).current;
+  const penguinDance = useRef(new Animated.Value(0)).current;
+  const thumbAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const sequence = Animated.sequence([
+    // Penguin "pop in", fade in, then start dance & thumbs up
+    Animated.sequence([
       Animated.parallel([
         Animated.spring(scaleAnim, {
           toValue: 1,
-          duration: 800,
+          friction: 4,
           useNativeDriver: true,
         }),
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 800,
+          duration: 500,
           useNativeDriver: true,
         }),
       ]),
       Animated.parallel([
-        Animated.timing(confettiAnim, {
-          toValue: 1,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
         Animated.loop(
           Animated.sequence([
-            Animated.timing(sparkleAnim, {
-              toValue: 1,
-              duration: 600,
+            Animated.timing(penguinBounce, {
+              toValue: -18,
+              duration: 320,
               useNativeDriver: true,
             }),
-            Animated.timing(sparkleAnim, {
+            Animated.timing(penguinBounce, {
               toValue: 0,
-              duration: 600,
+              duration: 320,
               useNativeDriver: true,
             }),
-          ]),
-          { iterations: 3 }
+          ])
         ),
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(penguinDance, {
+              toValue: 1,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+            Animated.timing(penguinDance, {
+              toValue: -1,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+            Animated.timing(penguinDance, {
+              toValue: 0,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+          ])
+        ),
+        Animated.sequence([
+          Animated.delay(350),
+          Animated.spring(thumbAnim, {
+            toValue: 1,
+            friction: 2,
+            useNativeDriver: true,
+          }),
+        ]),
       ]),
-    ]);
-
-    sequence.start();
+    ]).start();
 
     const timer = setTimeout(() => {
       onComplete();
-    }, 3500);
+    }, 2800);
 
     return () => clearTimeout(timer);
   }, []);
 
-  const renderConfetti = () => {
-    const confetti = [];
-    for (let i = 0; i < 30; i++) {
-      const randomX = Math.random() * width;
-      const randomDelay = Math.random() * 1000;
-      const randomSize = Math.random() * 6 + 3;
-      const colors = ['#000000', '#666666', '#999999', '#cccccc'];
-      const randomColor = colors[Math.floor(Math.random() * colors.length)];
-      
-      confetti.push(
-        <Animated.View
-          key={i}
-          style={[
-            styles.confettiPiece,
-            {
-              left: randomX,
-              width: randomSize,
-              height: randomSize,
-              backgroundColor: randomColor,
-              transform: [
-                {
-                  translateY: confettiAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-100, height + 100],
-                  }),
-                },
-                {
-                  rotate: confettiAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0deg', '360deg'],
-                  }),
-                },
-              ],
-              opacity: confettiAnim,
-            },
-          ]}
-        />
-      );
-    }
-    return confetti;
-  };
+  // Penguin dance rotation
+  const rotate = penguinDance.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: ['-12deg', '0deg', '12deg'],
+  });
 
-  const renderSparkles = () => {
-    const sparkles = [];
-    for (let i = 0; i < 8; i++) {
-      const angle = (i * 45) * (Math.PI / 180);
-      const radius = 120;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      
-      sparkles.push(
-        <Animated.View
-          key={i}
-          style={[
-            styles.sparkle,
-            {
-              transform: [
-                { translateX: x },
-                { translateY: y },
-                { scale: sparkleAnim },
-              ],
-            },
-          ]}
-        >
-          <Sparkles size={16} color="#000000" />
-        </Animated.View>
-      );
-    }
-    return sparkles;
-  };
+  // Thumb up hand pops up
+  const thumbUpScale = thumbAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.2, 1.1],
+  });
+  const thumbUpTranslate = thumbAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [30, 0],
+  });
 
   return (
     <View style={styles.container}>
-      {renderConfetti()}
-      
       <Animated.View
         style={[
           styles.content,
@@ -141,21 +105,73 @@ export default function SuccessAnimation({ onComplete, connectionData }) {
           },
         ]}
       >
-        <View style={styles.iconContainer}>
-          <View style={styles.checkCircle}>
-            <CheckCircle size={80} color="#000000" />
+        {/* Penguin character */}
+        <Animated.View
+          style={[
+            styles.penguinBody,
+            {
+              transform: [
+                { translateY: penguinBounce },
+                { rotate: rotate },
+              ],
+            },
+          ]}
+        >
+          {/* Head */}
+          <View style={styles.penguinHead}>
+            <View style={styles.penguinEye} />
+            <View style={[styles.penguinEye, { marginLeft: 10 }]} />
+            <View style={styles.penguinBeak} />
           </View>
-          {renderSparkles()}
-        </View>
+          {/* Belly */}
+          <View style={styles.penguinBelly} />
+          {/* Left wing (thumb up) */}
+          <Animated.View
+            style={[
+              styles.penguinWing,
+              {
+                left: -18,
+                transform: [
+                  { rotate: '-30deg' },
+                  { scale: thumbUpScale },
+                  { translateY: thumbUpTranslate },
+                ],
+                zIndex: 2,
+                backgroundColor: '#FFD700',
+                borderColor: '#B8860B',
+                borderWidth: 1.2,
+              },
+            ]}
+          >
+            {/* Thumb */}
+            <View style={styles.thumbUp} />
+          </Animated.View>
+          {/* Right wing */}
+          <View
+            style={[
+              styles.penguinWing,
+              { left: undefined, right: -18, transform: [{ rotate: '24deg' }], zIndex: 1 },
+            ]}
+          />
+          {/* Feet */}
+          <View style={[styles.penguinFoot, { left: 12 }]} />
+          <View style={[styles.penguinFoot, { right: 12 }]} />
+        </Animated.View>
+
+        {/* Speech bubble */}
+        <Animated.View style={[styles.speechBubble, { opacity: thumbAnim }]}>
+          <Text style={styles.speechText}>Thumbs up!</Text>
+        </Animated.View>
 
         <Text style={styles.title}>Connection Successful!</Text>
         <Text style={styles.subtitle}>
-          You've successfully connected with a new contact
+          You’ve successfully connected with a new contact
         </Text>
 
         <View style={styles.rewardContainer}>
           <View style={styles.rewardBox}>
-            <Trophy size={24} color="#000000" />
+            {/* Trophy emoji for reward */}
+            <Text style={styles.rewardEmoji}>🏆</Text>
             <Text style={styles.rewardText}>+1 Ping Token Earned</Text>
           </View>
         </View>
@@ -180,69 +196,160 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 40,
   },
-  iconContainer: {
+  // Penguin
+  penguinBody: {
+    alignItems: 'center',
     position: 'relative',
     marginBottom: 40,
-    justifyContent: 'center',
+  },
+  penguinHead: {
+    width: 44,
+    height: 44,
+    backgroundColor: '#000000',
+    borderRadius: 22,
     alignItems: 'center',
-  },
-  checkCircle: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 60,
-    padding: 20,
+    justifyContent: 'center',
+    flexDirection: 'row',
+    marginBottom: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.15,
-    shadowRadius: 25,
-    elevation: 15,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.18,
+    shadowRadius: 5,
+    elevation: 4,
   },
-  sparkle: {
+  penguinEye: {
+    width: 8,
+    height: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 4,
+    marginTop: -5,
+  },
+  penguinBeak: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderTopWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#FF8C00',
     position: 'absolute',
+    bottom: -7,
+    left: 12,
   },
+  penguinBelly: {
+    width: 38,
+    height: 54,
+    backgroundColor: '#000000',
+    borderRadius: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.16,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  penguinWing: {
+    position: 'absolute',
+    top: 28,
+    width: 19,
+    height: 31,
+    backgroundColor: '#000000',
+    borderRadius: 10,
+    zIndex: 1,
+  },
+  thumbUp: {
+    position: 'absolute',
+    width: 12,
+    height: 20,
+    backgroundColor: '#FFD700',
+    borderRadius: 7,
+    left: 8,
+    top: 6,
+    borderWidth: 1,
+    borderColor: '#B8860B',
+    transform: [
+      { rotate: '-15deg' }
+    ],
+  },
+  penguinFoot: {
+    position: 'absolute',
+    bottom: -10,
+    width: 13,
+    height: 8,
+    backgroundColor: '#FFB347',
+    borderRadius: 6,
+    zIndex: 0,
+  },
+  // Speech bubble
+  speechBubble: {
+    position: 'absolute',
+    top: 10,
+    left: 80,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderColor: '#ddd',
+    borderWidth: 1.5,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 1, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+  },
+  speechText: {
+    color: '#000',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  // Text and reward
   title: {
     fontSize: 32,
     fontWeight: '700',
     color: '#000000',
     marginBottom: 12,
     textAlign: 'center',
+    marginTop: 12,
   },
   subtitle: {
     fontSize: 18,
     color: '#666666',
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 34,
     lineHeight: 26,
   },
   rewardContainer: {
-    marginBottom: 40,
+    marginBottom: 30,
   },
   rewardBox: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderRadius: 25,
+    paddingHorizontal: 22,
+    paddingVertical: 13,
+    borderRadius: 21,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.09,
+    shadowRadius: 11,
+    elevation: 6,
+  },
+  rewardEmoji: {
+    fontSize: 22,
+    marginRight: 10,
   },
   rewardText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#000000',
-    marginLeft: 12,
   },
   footerText: {
     fontSize: 16,
     color: '#999999',
     textAlign: 'center',
     lineHeight: 22,
-  },
-  confettiPiece: {
-    position: 'absolute',
-    borderRadius: 2,
+    marginTop: 12,
   },
 });

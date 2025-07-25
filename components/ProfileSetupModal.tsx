@@ -74,6 +74,10 @@ export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupM
           placeholder={placeholder}
           placeholderTextColor="#999999"
           keyboardType={keyboardType}
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="next"
+          blurOnSubmit={false}
         />
       </View>
     </View>
@@ -156,11 +160,9 @@ export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupM
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
+      onRequestClose={() => {}}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-      >
+      <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <User size={32} color="#000000" />
@@ -182,14 +184,25 @@ export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupM
           </View>
         </View>
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{steps[currentStep].title}</Text>
-            {renderStepContent()}
-          </View>
-
-          <View style={styles.bottomSpacing} />
-        </ScrollView>
+        {/* KeyboardAvoidingView ONLY wraps the scrollable content */}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+        >
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{steps[currentStep].title}</Text>
+              {renderStepContent()}
+            </View>
+            <View style={styles.bottomSpacing} />
+          </ScrollView>
+        </KeyboardAvoidingView>
 
         <View style={styles.footer}>
           <View style={styles.buttonRow}>
@@ -198,7 +211,7 @@ export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupM
                 <Text style={styles.backButtonText}>Back</Text>
               </TouchableOpacity>
             )}
-            
+
             {currentStep < steps.length - 1 ? (
               <TouchableOpacity 
                 onPress={handleNext} 
@@ -225,12 +238,13 @@ export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupM
             )}
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  // ... styles unchanged ...
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',

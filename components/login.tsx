@@ -31,7 +31,7 @@ export default function LoginScreen({ onLogin }) {
                 <Text style={styles.logoText}>P</Text>
               </View>
             </View>
-            <Text style={styles.title}>Welcome to Pingu</Text>
+            <Text style={styles.title}>Welcome to Pingou</Text>
             <Text style={styles.subtitle}>Your networking companion</Text>
           </View>
 
