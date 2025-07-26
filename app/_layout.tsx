@@ -5,6 +5,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 import ProfileSetupModal from '@/components/ProfileSetupModal';
 import { Stack } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
+import { ProfileProvider } from '@/context/ProfileContext';
 
 export default function RootLayout() {
   useFrameworkReady();
@@ -45,16 +46,19 @@ export default function RootLayout() {
 
   return (
     <>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
+      <ProfileProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
+   
       
       <ProfileSetupModal
         visible={showProfileSetup}
         onComplete={handleProfileSetupComplete}
       />
+   </ProfileProvider>
     </>
   );
 }

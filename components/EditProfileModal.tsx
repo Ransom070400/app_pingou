@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { X, Save } from 'lucide-react-native';
 
@@ -10,35 +10,39 @@ interface EditProfileModalProps {
 }
 
 export default function EditProfileModal({ visible, profile, onClose, onSave }: EditProfileModalProps) {
-  const [formData, setFormData] = useState({
-    name: profile.name,
-    nickname: profile.nickname,
-    email: profile.email,
-    phone: profile.phone,
-    instagram: profile.instagram,
-    twitter: profile.twitter,
-    linkedin: profile.linkedin,
-  });
+  // Individual state for each field
+  const [name, setName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [twitter, setTwitter] = useState('');
+  const [linkedin, setLinkedin] = useState('');
+
+  // Sync state with incoming profile prop
+  useEffect(() => {
+    setName(profile.name || '');
+    setNickname(profile.nickname || '');
+    setEmail(profile.email || '');
+    setPhone(profile.phone || '');
+    setInstagram(profile.instagram || '');
+    setTwitter(profile.twitter || '');
+    setLinkedin(profile.linkedin || '');
+  }, [profile, visible]);
 
   const handleSave = () => {
-    onSave({ ...profile, ...formData });
+    const updatedProfile = {
+      ...profile,
+      name,
+      nickname,
+      email,
+      phone,
+      instagram,
+      twitter,
+      linkedin,
+    };
+    onSave(updatedProfile);
   };
-
-  const InputField = ({ label, value, onChangeText, placeholder, keyboardType = 'default' }) => (
-    <View style={styles.inputContainer}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <View style={styles.inputWrapper}>
-        <TextInput
-          style={styles.input}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor="#999999"
-          keyboardType={keyboardType}
-        />
-      </View>
-    </View>
-  );
 
   return (
     <Modal
@@ -63,58 +67,100 @@ export default function EditProfileModal({ visible, profile, onClose, onSave }: 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Personal Information</Text>
-            <InputField
-              label="Full Name"
-              value={formData.name}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
-              placeholder="Enter your full name"
-            />
-            <InputField
-              label="Nickname"
-              value={formData.nickname}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, nickname: text }))}
-              placeholder="Enter your nickname"
-            />
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Full Name</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Enter your full name"
+                  placeholderTextColor="#999999"
+                />
+              </View>
+            </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Nickname</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  value={nickname}
+                  onChangeText={setNickname}
+                  placeholder="Enter your nickname"
+                  placeholderTextColor="#999999"
+                />
+              </View>
+            </View>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Contact Information</Text>
-            <InputField
-              label="Email"
-              value={formData.email}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
-              placeholder="Enter your email"
-              keyboardType="email-address"
-            />
-            <InputField
-              label="Phone"
-              value={formData.phone}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, phone: text }))}
-              placeholder="Enter your phone number"
-              keyboardType="phone-pad"
-            />
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Email</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Enter your email"
+                  placeholderTextColor="#999999"
+                  keyboardType="email-address"
+                />
+              </View>
+            </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Phone</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder="Enter your phone number"
+                  placeholderTextColor="#999999"
+                  keyboardType="phone-pad"
+                />
+              </View>
+            </View>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Social Media</Text>
-            <InputField
-              label="Instagram"
-              value={formData.instagram}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, instagram: text }))}
-              placeholder="@username"
-            />
-            <InputField
-              label="Twitter"
-              value={formData.twitter}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, twitter: text }))}
-              placeholder="@username"
-            />
-            <InputField
-              label="LinkedIn"
-              value={formData.linkedin}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, linkedin: text }))}
-              placeholder="linkedin.com/in/username"
-            />
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Instagram</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  value={instagram}
+                  onChangeText={setInstagram}
+                  placeholder="@username"
+                  placeholderTextColor="#999999"
+                />
+              </View>
+            </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Twitter</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  value={twitter}
+                  onChangeText={setTwitter}
+                  placeholder="@username"
+                  placeholderTextColor="#999999"
+                />
+              </View>
+            </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>LinkedIn</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  value={linkedin}
+                  onChangeText={setLinkedin}
+                  placeholder="linkedin.com/in/username"
+                  placeholderTextColor="#999999"
+                />
+              </View>
+            </View>
           </View>
 
           <View style={styles.bottomSpacing} />
@@ -123,6 +169,8 @@ export default function EditProfileModal({ visible, profile, onClose, onSave }: 
     </Modal>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: {

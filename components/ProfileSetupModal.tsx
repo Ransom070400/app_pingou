@@ -1,22 +1,21 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { User, Save } from 'lucide-react-native';
-
+import { useProfile } from '@/context/ProfileContext';
 interface ProfileSetupModalProps {
   visible: boolean;
   onComplete: (profileData: any) => void;
 }
 
 export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupModalProps) {
-  const [formData, setFormData] = useState({
-    name: '',
-    nickname: '',
-    email: '',
-    phone: '',
-    instagram: '',
-    twitter: '',
-    linkedin: '',
-  });
+  const { setProfile } = useProfile();
+  const [name, setName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [twitter, setTwitter] = useState('');
+  const [linkedin, setLinkedin] = useState('');
 
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -48,97 +47,159 @@ export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupM
   };
 
   const handleComplete = () => {
-    onComplete(formData);
+  const qrValue = email.trim() ? `pingin:${email.trim()}` : 'pingin:default';
+  const profileData = {
+    name: name || '',
+    nickname: nickname || '',
+    email: email || '',
+    phone: phone || '',
+    instagram: instagram || '',
+    twitter: twitter || '',
+    linkedin: linkedin || '',
+    qr_code_data: qrValue,
+    ping_tokens: 0,
   };
+  setProfile(profileData);
+  onComplete(profileData);
+};
 
   const isCurrentStepValid = () => {
-    const currentFields = steps[currentStep].fields;
-    if (currentStep < 2) { // Required steps
-      return currentFields.some(field => formData[field].trim() !== '');
+    if (currentStep === 0) {
+      return name.trim() !== '';
+    }
+    if (currentStep === 1) {
+      return email.trim() !== '';
     }
     return true; // Social media step is optional
   };
 
   const isFormComplete = () => {
-    return formData.name.trim() !== '' && formData.email.trim() !== '';
+    return name.trim() !== '' && email.trim() !== '';
   };
 
-  const InputField = ({ label, value, onChangeText, placeholder, keyboardType = 'default' }) => (
-    <View style={styles.inputContainer}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <View style={styles.inputWrapper}>
-        <TextInput
-          style={styles.input}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor="#999999"
-          keyboardType={keyboardType}
-          autoCapitalize="none"
-          autoCorrect={false}
-          returnKeyType="next"
-          blurOnSubmit={false}
-        />
-      </View>
-    </View>
-  );
+  // const InputField = ({ label, value, onChangeText, placeholder, keyboardType = 'default' }) => (
+  //   <View style={styles.inputContainer}>
+  //     <Text style={styles.inputLabel}>{label}</Text>
+  //     <View style={styles.inputWrapper}>
+  //       <TextInput
+  //         style={styles.input}
+  //         value={value}
+  //         onChangeText={onChangeText}
+  //         placeholder={placeholder}
+  //         placeholderTextColor="#999999"
+  //         autoCapitalize="none"
+  //         autoCorrect={false}
+  //         returnKeyType="next"
+  //       />
+  //     </View>
+  //   </View>
+  // );
 
   const renderPersonalInfo = () => (
     <>
-      <InputField
-        label="Full Name *"
-        value={formData.name}
-        onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
-        placeholder="Enter your full name"
-      />
-      <InputField
-        label="Nickname"
-        value={formData.nickname}
-        onChangeText={(text) => setFormData(prev => ({ ...prev, nickname: text }))}
-        placeholder="Enter your nickname"
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Full Name *</Text>
+        <TextInput
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+          placeholder="Enter your full name"
+          placeholderTextColor="#999999"
+          autoCapitalize="words"
+          autoCorrect={false}
+          returnKeyType="next"
+        />
+      </View>
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Nickname</Text>
+        <TextInput
+          style={styles.input}
+          value={nickname}
+          onChangeText={setNickname}
+          placeholder="Enter your nickname"
+          placeholderTextColor="#999999"
+          autoCapitalize="words"
+          autoCorrect={false}
+          returnKeyType="next"
+        />
+      </View>
     </>
   );
 
   const renderContactInfo = () => (
     <>
-      <InputField
-        label="Email *"
-        value={formData.email}
-        onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
-        placeholder="Enter your email"
-        keyboardType="email-address"
-      />
-      <InputField
-        label="Phone"
-        value={formData.phone}
-        onChangeText={(text) => setFormData(prev => ({ ...prev, phone: text }))}
-        placeholder="Enter your phone number"
-        keyboardType="phone-pad"
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Email *</Text>
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          placeholder="Enter your email"
+          placeholderTextColor="#999999"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          returnKeyType="next"
+        />
+      </View>
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Phone</Text>
+        <TextInput
+          style={styles.input}
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="Enter your phone number"
+          placeholderTextColor="#999999"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="phone-pad"
+          returnKeyType="next"
+        />
+      </View>
     </>
   );
 
-  const renderSocialMedia = () => (
+   const renderSocialMedia = () => (
     <>
-      <InputField
-        label="Instagram"
-        value={formData.instagram}
-        onChangeText={(text) => setFormData(prev => ({ ...prev, instagram: text }))}
-        placeholder="@username"
-      />
-      <InputField
-        label="Twitter"
-        value={formData.twitter}
-        onChangeText={(text) => setFormData(prev => ({ ...prev, twitter: text }))}
-        placeholder="@username"
-      />
-      <InputField
-        label="LinkedIn"
-        value={formData.linkedin}
-        onChangeText={(text) => setFormData(prev => ({ ...prev, linkedin: text }))}
-        placeholder="linkedin.com/in/username"
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Instagram</Text>
+        <TextInput
+          style={styles.input}
+          value={instagram}
+          onChangeText={setInstagram}
+          placeholder="@username"
+          placeholderTextColor="#999999"
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="next"
+        />
+      </View>
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Twitter</Text>
+        <TextInput
+          style={styles.input}
+          value={twitter}
+          onChangeText={setTwitter}
+          placeholder="@username"
+          placeholderTextColor="#999999"
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="next"
+        />
+      </View>
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>LinkedIn</Text>
+        <TextInput
+          style={styles.input}
+          value={linkedin}
+          onChangeText={setLinkedin}
+          placeholder="linkedin.com/in/username"
+          placeholderTextColor="#999999"
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="done"
+        />
+      </View>
     </>
   );
 

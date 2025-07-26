@@ -6,21 +6,11 @@ import QRCode from 'react-native-qrcode-svg';
 import * as ImagePicker from 'expo-image-picker';
 import { api } from '@/lib/supabase';
 import EditProfileModal from '@/components/EditProfileModal';
+import { useProfile } from '@/context/ProfileContext';
 
 export default function ProfileScreen() {
-  const [profile, setProfile] = useState({
-    id: 'user123',
-    name: 'John Doe',
-    nickname: 'JD',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    instagram: '@johndoe',
-    twitter: '@johndoe',
-    linkedin: 'linkedin.com/in/johndoe',
-    avatar_url: null,
-    ping_tokens: 42,
-    qr_code_data: 'user123',
-  });
+  const { profile, setProfile } = useProfile();
+  
   
   const [connectionsCount, setConnectionsCount] = useState(18);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -111,7 +101,7 @@ export default function ProfileScreen() {
           <View style={styles.qrContainer}>
             <View style={styles.qrCard}>
               <QRCode
-                value={profile.qr_code_data}
+                value={profile?.qr_code_data || 'pingin:default'}
                 size={180}
                 backgroundColor="#FFFFFF"
                 color="#000000"
