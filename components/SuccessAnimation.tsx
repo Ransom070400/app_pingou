@@ -176,9 +176,7 @@ export default function SuccessAnimation({ onComplete, connectionData }) {
           </View>
         </View>
 
-        <Text style={styles.footerText}>
-          Your new connection has been added to your network
-        </Text>
+        
       </Animated.View>
     </View>
   );

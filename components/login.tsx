@@ -1,7 +1,89 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { router } from 'expo-router';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Animated, Easing } from 'react-native';
 import { Mail, ArrowRight } from 'lucide-react-native';
+
+function DancingPenguin() {
+  // Animation hooks for bounce and rotate
+  const bounce = useState(() => new Animated.Value(0))[0];
+  const rotate = useState(() => new Animated.Value(0))[0];
+
+  // Start the animation loop
+  useState(() => {
+    Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(bounce, {
+            toValue: -12,
+            duration: 350,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(bounce, {
+            toValue: 0,
+            duration: 350,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(rotate, {
+            toValue: 1,
+            duration: 400,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(rotate, {
+            toValue: -1,
+            duration: 400,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(rotate, {
+            toValue: 0,
+            duration: 400,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+      ])
+    ).start();
+  }, []);
+
+  const rotateInterpolate = rotate.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: ['-10deg', '0deg', '10deg'],
+  });
+
+  return (
+    <Animated.View
+      style={{
+        width: 80,
+        height: 80,
+        justifyContent: 'center',
+        alignItems: 'center',
+        transform: [{ translateY: bounce }, { rotate: rotateInterpolate }],
+      }}
+    >
+      {/* Penguin Body */}
+      <View style={styles.penguinBody}>
+        {/* Head */}
+        <View style={styles.penguinHead}>
+          <View style={styles.penguinEye} />
+          <View style={[styles.penguinEye, { marginLeft: 10 }]} />
+          <View style={styles.penguinBeak} />
+        </View>
+        {/* Belly */}
+        <View style={styles.penguinBelly} />
+        {/* Wings */}
+        <View style={[styles.penguinWing, { left: -16, transform: [{ rotate: '-18deg' }] }]} />
+        <View style={[styles.penguinWing, { right: -16, left: undefined, transform: [{ rotate: '18deg' }] }]} />
+        {/* Feet */}
+        <View style={[styles.penguinFoot, { left: 12 }]} />
+        <View style={[styles.penguinFoot, { right: 12 }]} />
+      </View>
+    </Animated.View>
+  );
+}
 
 export default function LoginScreen({ onLogin }) {
   const [email, setEmail] = useState('');
@@ -27,9 +109,8 @@ export default function LoginScreen({ onLogin }) {
         <View style={styles.content}>
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <View style={styles.logo}>
-                <Text style={styles.logoText}>P</Text>
-              </View>
+              {/* Animated Penguin logo */}
+              <DancingPenguin />
             </View>
             <Text style={styles.title}>Welcome to Pingou</Text>
             <Text style={styles.subtitle}>Your networking companion</Text>
@@ -78,6 +159,10 @@ export default function LoginScreen({ onLogin }) {
   );
 }
 
+const penguinColor = "#000";
+const penguinBeakColor = "#FF8C00";
+const penguinFootColor = "#FFB347";
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -98,24 +183,80 @@ const styles = StyleSheet.create({
   logoContainer: {
     marginBottom: 30,
   },
-  logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#000000',
-    justifyContent: 'center',
+
+  // Penguin Styles
+  penguinBody: {
     alignItems: 'center',
+    position: 'relative',
+  },
+  penguinHead: {
+    width: 38,
+    height: 38,
+    backgroundColor: penguinColor,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    marginBottom: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowRadius: 7,
+    elevation: 4,
   },
-  logoText: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: '#FFFFFF',
+  penguinEye: {
+    width: 7,
+    height: 7,
+    backgroundColor: '#FFF',
+    borderRadius: 3.5,
+    marginTop: -3,
   },
+  penguinBeak: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderTopWidth: 6,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: penguinBeakColor,
+    position: 'absolute',
+    bottom: -7,
+    left: 10,
+  },
+  penguinBelly: {
+    width: 35,
+    height: 50,
+    backgroundColor: penguinColor,
+    borderRadius: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.13,
+    shadowRadius: 7,
+    elevation: 3,
+  },
+  penguinWing: {
+    position: 'absolute',
+    top: 26,
+    width: 13,
+    height: 27,
+    backgroundColor: penguinColor,
+    borderRadius: 9,
+    zIndex: 1,
+  },
+  penguinFoot: {
+    position: 'absolute',
+    bottom: -8,
+    width: 11,
+    height: 6,
+    backgroundColor: penguinFootColor,
+    borderRadius: 5,
+    zIndex: 0,
+  },
+
+  // Rest of your styles
   title: {
     fontSize: 32,
     fontWeight: '700',
