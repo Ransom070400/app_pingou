@@ -1,11 +1,11 @@
-# 🚀 Pingou
+# Pingou
 
 Pingou is a **Sui-powered connection exchange app** that gamifies networking by enabling users to share their profiles via **QR codes and NFC cards**.  
 The app makes networking at **events, conferences, and meetups** fast, secure, and fun — while rewarding users for every connection.  
 
 ---
 
-## 🌍 Overview
+## Overview
 
 Pingou solves the friction in networking by combining **Web3 identity**, **gamification**, and **seamless onboarding**.  
 
@@ -22,7 +22,7 @@ Pingou solves the friction in networking by combining **Web3 identity**, **gamif
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 - **Blockchain:** [Sui](https://sui.io)  
 - **Storage:** [Walrus](https://walrus.xyz)  
 - **Authentication:** zkLogin  
