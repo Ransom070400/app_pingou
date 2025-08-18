@@ -5,18 +5,16 @@ use sui::transfer;
 use sui::tx_context::{Self, TxContext};
 use std::option;
 
-
 public struct PING has drop {}
-
 
 fun init(witness: PING, ctx: &mut TxContext) {
     let (mut treasury, metadata) = coin::create_currency(
         witness,
-        6,              
-        b"PG",          
-        b"PING",        
-        b"",            
-        option::none(), 
+        6,              // decimals
+        b"PG",          // symbol
+        b"PING",        // name
+        b"",            // description
+        option::none(), // icon url
         ctx,
     );
     
@@ -30,8 +28,7 @@ fun init(witness: PING, ctx: &mut TxContext) {
 }
 
 /// Mint new PING tokens and send them to a recipient.
-
-public fun mint(
+public entry fun mint(
     treasury_cap: &mut TreasuryCap<PING>,
     amount: u64,
     recipient: address,
