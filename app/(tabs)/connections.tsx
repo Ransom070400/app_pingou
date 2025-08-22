@@ -77,7 +77,11 @@ export default function ConnectionsScreen() {
               style={styles.avatar}
             >
               <Text style={styles.avatarInitials}>
+                // Before (line 80):
                 {connection.name.split(' ').map(n => n[0]).join('')}
+                
+                // After:
+                {(connection.name || '').split(' ').map(n => n[0] || '').join('')}
               </Text>
             </LinearGradient>
           )}

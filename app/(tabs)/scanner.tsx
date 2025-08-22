@@ -3,13 +3,17 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { QrCode, Flashlight, FlashlightOff } from 'lucide-react-native';
 import SuccessAnimation from '@/components/SuccessAnimation';
+import FetchedUser from '@/components/fetchedUser';
+import { getProfile } from '@/hooks/getProfile';
+import { ProfileType } from '@/types/ProfileTypes';
 
 export default function ScannerScreen() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const [flashlight, setFlashlight] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [scannedData, setScannedData] = useState(null);
+  const [fetchedProfile, setFetchedProfile] = useState<ProfileType | null>(null);
+
 
   if (!permission) {
     return (
@@ -38,13 +42,11 @@ export default function ScannerScreen() {
     );
   }
 
-  const handleBarCodeScanned = ({ data }) => {
-    setScannedData(data);
+  const handleBarCodeScanned = async ({ data }: { data: string }) => {
+    const profile =  await getProfile(data);
+    setFetchedProfile(profile);
     setShowSuccess(true);
     
-    setTimeout(() => {
-      setShowSuccess(false);
-    }, 3000);
   };
 
   const toggleFlashlight = () => {
@@ -53,10 +55,14 @@ export default function ScannerScreen() {
 
   if (showSuccess) {
     return (
-      <SuccessAnimation 
-        onComplete={() => setShowSuccess(false)}
-        connectionData={scannedData}
+      <FetchedUser
+       user={fetchedProfile!} 
+       onClose={() => setShowSuccess(false)}
       />
+      // <SuccessAnimation 
+      //   onComplete={() => setShowSuccess(false)}
+      //   connectionData={scannedData}
+      // />
     );
   }
 

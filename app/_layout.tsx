@@ -6,6 +6,7 @@ import ProfileSetupModal from '@/components/ProfileSetupModal';
 import { Stack } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ProfileProvider } from '@/context/ProfileContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RootLayout() {
   useFrameworkReady();
@@ -20,6 +21,9 @@ export default function RootLayout() {
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
+  
+
+
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -40,9 +44,9 @@ export default function RootLayout() {
     return <LoadingScreen />;
   }
 
-  if (!isLoggedIn) {
-    return <LoginScreen onLogin={handleLogin} />;
-  }
+   if (!isLoggedIn) {
+     return <LoginScreen onLogin={handleLogin} />;
+   }
 
   return (
     <>

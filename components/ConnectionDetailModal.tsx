@@ -89,7 +89,8 @@ export default function ConnectionDetailModal({ visible, connection, onClose }: 
                   style={styles.avatar}
                 >
                   <Text style={styles.avatarInitials}>
-                    {connection.name.split(' ').map(n => n[0]).join('')}
+                    // Similar fix needed here
+                    {(connection.name || '').split(' ').map(n => n[0] || '').join('')}
                   </Text>
                 </LinearGradient>
               )}

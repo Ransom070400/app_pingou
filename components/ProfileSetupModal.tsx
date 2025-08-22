@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { User, Save } from 'lucide-react-native';
+import { useState, useMemo } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { User, Save} from 'lucide-react-native';
 import { useProfile } from '@/context/ProfileContext';
+import { randomUUID } from 'expo-crypto';
 interface ProfileSetupModalProps {
   visible: boolean;
   onComplete: (profileData: any) => void;
@@ -16,6 +18,7 @@ export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupM
   const [instagram, setInstagram] = useState('');
   const [twitter, setTwitter] = useState('');
   const [linkedin, setLinkedin] = useState('');
+
 
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -46,20 +49,63 @@ export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupM
     }
   };
 
-  const handleComplete = () => {
-  const qrValue = email.trim() ? `pingin:${email.trim()}` : 'pingin:default';
+    const storeUserId = async (data: any) => {
+
+  try {
+
+    await AsyncStorage.setItem('my-key', data);
+  } catch (e) {
+    // saving error
+    Alert.alert("Error", "Could not save user ID")  
+
+  }
+};
+
+  const handleComplete = async () => {
+  //nst qrValue = email.trim() ? `pingin:${email.trim()}` : 'pingin:default';
+  const qrValues = {
+    email: email.trim(),
+
+  }
   const profileData = {
-    name: name || '',
-    nickname: nickname || '',
+    firstname: name || '',
+    lastname: nickname || '',
+    username: nickname,
     email: email || '',
-    phone: phone || '',
-    instagram: instagram || '',
-    twitter: twitter || '',
-    linkedin: linkedin || '',
-    qr_code_data: qrValue,
-    ping_tokens: 0,
+    // phone: phone || '',
+    // instagram: instagram || '',
+    // twitter: twitter || '',
+    // linkedin: linkedin || '',
+    // qr_code_data: qrValues,
+    // ping_tokens: 0,
   };
-  setProfile(profileData);
+  // const profileData = {
+  //   name: name || '',
+  //   nickname: nickname || '','
+  //   email: email || '',
+  //   phone: phone || '',
+  //   instagram: instagram || '',
+  //   twitter: twitter || '',
+  //   linkedin: linkedin || '',
+  //   // qr_code_data: qrValues,
+  //   // ping_tokens: 0,
+  // };
+
+  console.log(profileData)
+
+  const response = await fetch('https://pingou-20c437628612.herokuapp.com/users', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(profileData),
+  });
+  const data = await response.json();
+  
+  // setProfile(profileDaif ta);
+ 
+
+
   onComplete(profileData);
 };
 

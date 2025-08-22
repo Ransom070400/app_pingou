@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CreditCard as Edit3, Camera, Trophy, Users as UsersIcon } from 'lucide-react-native';
@@ -7,17 +7,19 @@ import * as ImagePicker from 'expo-image-picker';
 import { api } from '@/lib/supabase';
 import EditProfileModal from '@/components/EditProfileModal';
 import { useProfile } from '@/context/ProfileContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getQRCode } from '@/hooks/getQRCode';
 
 export default function ProfileScreen() {
   const { profile, setProfile } = useProfile();
-  
-  
   const [connectionsCount, setConnectionsCount] = useState(18);
   const [showEditModal, setShowEditModal] = useState(false);
 
+
+
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
+    if (status !== 'granted') { 
       Alert.alert('Permission needed', 'Please grant camera roll permissions to upload a profile picture.');
       return;
     }
@@ -34,6 +36,10 @@ export default function ProfileScreen() {
     }
   };
 
+  if (profile === null){
+    return <Text style={{ justifyContent: "center", alignItems: "center"}}>Loading...</Text>;
+  }
+
   const ProfileImage = () => (
     <View style={styles.profileImageContainer}>
       <View style={styles.profileImageShadow}>
@@ -44,8 +50,11 @@ export default function ProfileScreen() {
             colors={['#f8f9fa', '#e9ecef']}
             style={styles.profileImage}
           >
+
+         {/* Updated ProfileImage component */}
             <Text style={styles.profileInitials}>
-              {profile.name.split(' ').map(n => n[0]).join('')}
+              {(profile.firstname || '').charAt(0).toUpperCase()}
+              {(profile.lastname || '').charAt(0).toUpperCase()}
             </Text>
           </LinearGradient>
         )}
@@ -61,9 +70,10 @@ export default function ProfileScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <ProfileImage />
-          
-          <Text style={styles.name}>{profile.name}</Text>
-          <Text style={styles.nickname}>"{profile.nickname}"</Text>
+          <Text style={styles.name}>
+            {profile.firstname} {profile.lastname}
+          </Text>
+          <Text style={styles.nickname}>"@{profile.username}"</Text>
           
           <TouchableOpacity 
             style={styles.editButton}
@@ -101,11 +111,11 @@ export default function ProfileScreen() {
           <View style={styles.qrContainer}>
             <View style={styles.qrCard}>
               <QRCode
-                value={profile?.qr_code_data || 'pingin:default'}
+                value={profile._id}
                 size={180}
                 backgroundColor="#FFFFFF"
                 color="#000000"
-              />
+                />
               <Text style={styles.qrSubtext}>Others can scan this to connect with you</Text>
             </View>
           </View>
