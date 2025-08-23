@@ -85,19 +85,20 @@ function DancingPenguin() {
   );
 }
 
-export default function LoginScreen({ onLogin }) {
+export default function LoginScreen({ onLogin }: { onLogin: (email: string) => void }) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleLogin =  () => {
+    console.log("I was called")
     if (!email.trim()) return;
 
     setIsLoading(true);
 
     setTimeout(() => {
       setIsLoading(false);
-      if (onLogin) onLogin(); // Notify parent to proceed to app
-    }, 1500);
+      if (onLogin) onLogin(email); // Notify parent to proceed to app
+    }, 1000);
   };
 
   return (

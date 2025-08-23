@@ -7,18 +7,21 @@ import { randomUUID } from 'expo-crypto';
 interface ProfileSetupModalProps {
   visible: boolean;
   onComplete: (profileData: any) => void;
+  email:string;
 }
 
-export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupModalProps) {
+export default function ProfileSetupModal({ visible, onComplete, email:emailFromLogin }: ProfileSetupModalProps) {
   const { setProfile } = useProfile();
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(emailFromLogin);
   const [phone, setPhone] = useState('');
   const [instagram, setInstagram] = useState('');
   const [twitter, setTwitter] = useState('');
   const [linkedin, setLinkedin] = useState('');
 
+
+  
 
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -46,20 +49,10 @@ export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupM
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
-    }
+    } 
   };
 
-    const storeUserId = async (data: any) => {
 
-  try {
-
-    await AsyncStorage.setItem('my-key', data);
-  } catch (e) {
-    // saving error
-    Alert.alert("Error", "Could not save user ID")  
-
-  }
-};
 
   const handleComplete = async () => {
   //nst qrValue = email.trim() ? `pingin:${email.trim()}` : 'pingin:default';
@@ -91,7 +84,6 @@ export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupM
   //   // ping_tokens: 0,
   // };
 
-  console.log(profileData)
 
   const response = await fetch('https://pingou-20c437628612.herokuapp.com/users', {
     method: 'POST',
@@ -101,12 +93,11 @@ export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupM
     body: JSON.stringify(profileData),
   });
   const data = await response.json();
-  
-  // setProfile(profileDaif ta);
- 
-
-
-  onComplete(profileData);
+  if (!response.ok){
+    Alert.alert("Error", data.error || "Failed to create profile. Please try again.")
+  } else {
+    onComplete(data);
+  }
 };
 
   const isCurrentStepValid = () => {
@@ -175,7 +166,7 @@ export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupM
   const renderContactInfo = () => (
     <>
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Email *</Text>
+        <Text style={styles.inputLabel}>Contact Email *</Text>
         <TextInput
           style={styles.input}
           value={email}
@@ -188,7 +179,7 @@ export default function ProfileSetupModal({ visible, onComplete }: ProfileSetupM
           returnKeyType="next"
         />
       </View>
-      <View style={styles.inputContainer}>
+      <View style={styles.inputContainer}> 
         <Text style={styles.inputLabel}>Phone</Text>
         <TextInput
           style={styles.input}

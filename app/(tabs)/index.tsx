@@ -15,7 +15,16 @@ export default function ProfileScreen() {
   const [connectionsCount, setConnectionsCount] = useState(18);
   const [showEditModal, setShowEditModal] = useState(false);
 
-
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('my-key');
+      setProfile(null);
+      Alert.alert('Logged Out', 'Your session has been cleared.');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to clear session.');
+      console.error('Failed to remove auth key from storage', error);
+    }
+  };
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -155,6 +164,10 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
+
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Delete Stored ID (Logout)</Text>
+        </TouchableOpacity>
 
         <View style={styles.bottomSpacing} />
       </ScrollView>
@@ -396,6 +409,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000000',
     fontWeight: '600',
+  },
+  logoutButton: {
+    marginHorizontal: 20,
+    marginTop: 10,
+    padding: 15,
+    backgroundColor: '#dc3545',
+    borderRadius: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  logoutButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 16,
   },
   bottomSpacing: {
     height: 40,
