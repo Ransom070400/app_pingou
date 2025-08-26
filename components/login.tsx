@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Animated, Easing } from 'react-native';
-import { Mail, ArrowRight } from 'lucide-react-native';
+import { Mail, ArrowRight, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { supabase } from '../lib/supabase';
 
 function DancingPenguin() {
   // Animation hooks for bounce and rotate
@@ -85,20 +86,59 @@ function DancingPenguin() {
   );
 }
 
-export default function LoginScreen({ onLogin }: { onLogin: (email: string) => void }) {
+export default function LoginScreen({
+  onLogin,
+  onSetupProfile,
+  onAuthResult, // NEW
+}: {
+  onLogin: (email: string) => void;
+  onSetupProfile?: (email: string) => void;
+  onAuthResult?: (r: { success: boolean; needsProfile: boolean; email: string; error?: string }) => void; // NEW
+}) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin =  () => {
-    console.log("I was called")
-    if (!email.trim()) return;
+  const handleLogin = async () => {
+    if (!email.trim() || !password) return;
 
     setIsLoading(true);
+    setError(null);
+    try {
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-    setTimeout(() => {
+      if (!signInError && signInData?.user) {
+        onLogin(email.trim());
+        onAuthResult?.({ success: true, needsProfile: false, email: email.trim() }); // NEW
+        return;
+      }
+
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+      });
+
+      if (!signUpError && signUpData?.user) {
+        onSetupProfile?.(email.trim());
+        onAuthResult?.({ success: true, needsProfile: true, email: email.trim() }); // NEW
+        return;
+      }
+
+      const message = signUpError?.message || signInError?.message || 'Authentication failed.';
+      setError(message);
+      onAuthResult?.({ success: false, needsProfile: false, email: email.trim(), error: message }); // NEW
+    } catch (e: any) {
+      const message = e?.message ?? 'Something went wrong.';
+      setError(message);
+      onAuthResult?.({ success: false, needsProfile: false, email: email.trim(), error: message }); // NEW
+    } finally {
       setIsLoading(false);
-      if (onLogin) onLogin(email); // Notify parent to proceed to app
-    }, 1000);
+    }
   };
 
   return (
@@ -134,17 +174,40 @@ export default function LoginScreen({ onLogin }: { onLogin: (email: string) => v
               />
             </View>
 
+            {/* Password input */}
+            <View style={styles.inputContainer}>
+              <View style={styles.inputIcon}>
+                <Lock size={20} color="#666666" />
+              </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                placeholderTextColor="#999999"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoComplete="password"
+                textContentType="password"
+              />
+              <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.passwordToggle}>
+                {showPassword ? <EyeOff size={20} color="#666666" /> : <Eye size={20} color="#666666" />}
+              </TouchableOpacity>
+            </View>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
             <TouchableOpacity
-              style={[styles.loginButton, !email.trim() && styles.loginButtonDisabled]}
+              style={[styles.loginButton, (!email.trim() || !password) && styles.loginButtonDisabled]}
               onPress={handleLogin}
-              disabled={!email.trim() || isLoading}
+              disabled={!email.trim() || !password || isLoading}
             >
-              <Text style={[styles.loginButtonText, !email.trim() && styles.loginButtonTextDisabled]}>
+              <Text style={[styles.loginButtonText, (!email.trim() || !password) && styles.loginButtonTextDisabled]}>
                 {isLoading ? 'Signing in...' : 'Continue'}
               </Text>
               <ArrowRight 
                 size={20} 
-                color={email.trim() ? "#FFFFFF" : "#999999"} 
+                color={email.trim() && password ? "#FFFFFF" : "#999999"} 
               />
             </TouchableOpacity>
           </View>
@@ -294,6 +357,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000000',
     fontWeight: '500',
+  },
+  passwordToggle: {
+    marginLeft: 10,
+  },
+  errorText: {
+    color: '#d9534f',
+    textAlign: 'center',
+    marginBottom: 12,
   },
   loginButton: {
     flexDirection: 'row',

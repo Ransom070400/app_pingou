@@ -1,6 +1,5 @@
-import { useState, useMemo } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Keyboard } from 'react-native';
 import { User, Save} from 'lucide-react-native';
 import { useProfile } from '@/context/ProfileContext';
 import { randomUUID } from 'expo-crypto';
@@ -10,7 +9,7 @@ interface ProfileSetupModalProps {
   email:string;
 }
 
-export default function ProfileSetupModal({ visible, onComplete, email:emailFromLogin }: ProfileSetupModalProps) {
+const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ visible, onComplete, email:emailFromLogin }) => {
   const { setProfile } = useProfile();
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
@@ -55,51 +54,21 @@ export default function ProfileSetupModal({ visible, onComplete, email:emailFrom
 
 
   const handleComplete = async () => {
-  //nst qrValue = email.trim() ? `pingin:${email.trim()}` : 'pingin:default';
-  const qrValues = {
-    email: email.trim(),
+    const profileData = {
+      firstname: name || '',
+      lastname: nickname || '',
+      username: nickname || '',
+      email: email || '',
+      // phone,
+      // instagram,
+      // twitter,
+      // linkedin,
+    };
 
-  }
-  const profileData = {
-    firstname: name || '',
-    lastname: nickname || '',
-    username: nickname,
-    email: email || '',
-    // phone: phone || '',
-    // instagram: instagram || '',
-    // twitter: twitter || '',
-    // linkedin: linkedin || '',
-    // qr_code_data: qrValues,
-    // ping_tokens: 0,
+    onComplete(profileData);
   };
-  // const profileData = {
-  //   name: name || '',
-  //   nickname: nickname || '','
-  //   email: email || '',
-  //   phone: phone || '',
-  //   instagram: instagram || '',
-  //   twitter: twitter || '',
-  //   linkedin: linkedin || '',
-  //   // qr_code_data: qrValues,
-  //   // ping_tokens: 0,
-  // };
 
-
-  const response = await fetch('https://pingou-20c437628612.herokuapp.com/users', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(profileData),
-  });
-  const data = await response.json();
-  if (!response.ok){
-    Alert.alert("Error", data.error || "Failed to create profile. Please try again.")
-  } else {
-    onComplete(data);
-  }
-};
-
+  // Validation helpers (outside handleComplete)
   const isCurrentStepValid = () => {
     if (currentStep === 0) {
       return name.trim() !== '';
@@ -283,10 +252,10 @@ export default function ProfileSetupModal({ visible, onComplete, email:emailFrom
         </View>
 
         {/* KeyboardAvoidingView ONLY wraps the scrollable content */}
-        <KeyboardAvoidingView
+        <View
           style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+          // behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          // keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
         >
           <ScrollView
             style={styles.content}
@@ -300,7 +269,7 @@ export default function ProfileSetupModal({ visible, onComplete, email:emailFrom
             </View>
             <View style={styles.bottomSpacing} />
           </ScrollView>
-        </KeyboardAvoidingView>
+        </View>
 
         <View style={styles.footer}>
           <View style={styles.buttonRow}>
@@ -340,6 +309,7 @@ export default function ProfileSetupModal({ visible, onComplete, email:emailFrom
     </Modal>
   );
 }
+
 
 const styles = StyleSheet.create({
   // ... styles unchanged ...
@@ -487,4 +457,6 @@ const styles = StyleSheet.create({
   bottomSpacing: {
     height: 40,
   },
-});
+})
+
+export default ProfileSetupModal;

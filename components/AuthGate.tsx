@@ -11,8 +11,10 @@ export default function AuthGate() {
   const { profile, setProfile, loading } = useProfile();
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [email, setEmail] = useState<string>("")
+  const [authState, setAuthState] = useState<{ success: boolean; needsProfile: boolean } | null>(null);
 
   const handleLogin = (email: string) => {
+    console.log("I got here")
     setShowProfileSetup(true);
     setEmail(email)
   };
@@ -20,13 +22,7 @@ export default function AuthGate() {
   const handleProfileSetupComplete = async (profileData: any) => {
     setShowProfileSetup(false);
     try {
-      const id = profileData?._id ?? profileData?.id ?? null;
-      if (!id) {
-        console.warn('handleProfileSetupComplete: no user id found on profileData');
-        return;
-      }
-      await AsyncStorage.setItem('my-key', id);
-      setProfile(profileData);
+    
     } catch (err) {
       console.warn('Failed to save user id to AsyncStorage', err);
     }
@@ -39,7 +35,22 @@ export default function AuthGate() {
   if (!profile) {
     return (
       <>
-        <LoginScreen onLogin={handleLogin} />
+        <LoginScreen
+          onLogin={(email) => {/* navigate to app */}}
+          onSetupProfile={(email) => {/* navigate to profile setup */}}
+          onAuthResult={(r) => {
+            setAuthState({ success: r.success, needsProfile: r.needsProfile });
+            if (r.success && !r.needsProfile) {
+              // proceed to app
+            } else if (r.success && r.needsProfile) {
+              // route to profile setup
+              setShowProfileSetup(true);
+              setEmail(r.email); // FIX: use r.email
+            } else {
+              // show error r.error
+            }
+          }}
+        />
         <ProfileSetupModal
           visible={showProfileSetup}
           onComplete={handleProfileSetupComplete}

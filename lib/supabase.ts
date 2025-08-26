@@ -1,15 +1,19 @@
-import { createClient } from '@supabase/supabase-js';
-
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { createClient, processLock } from '@supabase/supabase-js'
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
+export const supabase = createClient(
+supabaseUrl,
+supabaseAnonKey,
+  {
+    auth: {
+      storage: AsyncStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  });
 
 // Database types
 export interface UserProfile {
@@ -71,124 +75,124 @@ export interface UserAchievement {
   achievements: Achievement;
 }
 
-// API functions
-export const api = {
-  // Profile functions
-  async getProfile(): Promise<UserProfile> {
-    const response = await fetch(`${supabaseUrl}/functions/v1/profile`, {
-      headers: {
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+// // API functions
+// export const api = {
+//   // Profile functions
+//   async getProfile(): Promise<UserProfile> {
+//     const response = await fetch(`${supabaseUrl}/functions/v1/profile`, {
+//       headers: {
+//         'Authorization': `Bearer ${supabaseAnonKey}`,
+//         'Content-Type': 'application/json',
+//       },
+//     });
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch profile');
-    }
+//     if (!response.ok) {
+//       throw new Error('Failed to fetch profile');
+//     }
     
-    const data = await response.json();
-    return data.profile;
-  },
+//     const data = await response.json();
+//     return data.profile;
+//   },
 
-  async updateProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
-    const response = await fetch(`${supabaseUrl}/functions/v1/profile`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updates),
-    });
+//   async updateProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
+//     const response = await fetch(`${supabaseUrl}/functions/v1/profile`, {
+//       method: 'PUT',
+//       headers: {
+//         'Authorization': `Bearer ${supabaseAnonKey}`,
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify(updates),
+//     });
     
-    if (!response.ok) {
-      throw new Error('Failed to update profile');
-    }
+//     if (!response.ok) {
+//       throw new Error('Failed to update profile');
+//     }
     
-    const data = await response.json();
-    return data.profile;
-  },
+//     const data = await response.json();
+//     return data.profile;
+//   },
 
-  // Connection functions
-  async getConnections(): Promise<Connection[]> {
-    const response = await fetch(`${supabaseUrl}/functions/v1/connections`, {
-      headers: {
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+//   // Connection functions
+//   async getConnections(): Promise<Connection[]> {
+//     const response = await fetch(`${supabaseUrl}/functions/v1/connections`, {
+//       headers: {
+//         'Authorization': `Bearer ${supabaseAnonKey}`,
+//         'Content-Type': 'application/json',
+//       },
+//     });
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch connections');
-    }
+//     if (!response.ok) {
+//       throw new Error('Failed to fetch connections');
+//     }
     
-    const data = await response.json();
-    return data.connections;
-  },
+//     const data = await response.json();
+//     return data.connections;
+//   },
 
-  async createConnection(qrCodeData: string): Promise<any> {
-    const response = await fetch(`${supabaseUrl}/functions/v1/connections`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        qr_code_data: qrCodeData,
-      }),
-    });
+//   async createConnection(qrCodeData: string): Promise<any> {
+//     const response = await fetch(`${supabaseUrl}/functions/v1/connections`, {
+//       method: 'POST',
+//       headers: {
+//         'Authorization': `Bearer ${supabaseAnonKey}`,
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify({
+//         qr_code_data: qrCodeData,
+//       }),
+//     });
     
-    if (!response.ok) {
-      throw new Error('Failed to create connection');
-    }
+//     if (!response.ok) {
+//       throw new Error('Failed to create connection');
+//     }
     
-    return response.json();
-  },
+//     return response.json();
+//   },
 
-  // Rewards functions
-  async getRewards(): Promise<{ rewards: Reward[]; user_rewards: any[] }> {
-    const response = await fetch(`${supabaseUrl}/functions/v1/rewards`, {
-      headers: {
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+//   // Rewards functions
+//   async getRewards(): Promise<{ rewards: Reward[]; user_rewards: any[] }> {
+//     const response = await fetch(`${supabaseUrl}/functions/v1/rewards`, {
+//       headers: {
+//         'Authorization': `Bearer ${supabaseAnonKey}`,
+//         'Content-Type': 'application/json',
+//       },
+//     });
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch rewards');
-    }
+//     if (!response.ok) {
+//       throw new Error('Failed to fetch rewards');
+//     }
     
-    return response.json();
-  },
+//     return response.json();
+//   },
 
-  async redeemReward(rewardId: string): Promise<any> {
-    const response = await fetch(`${supabaseUrl}/functions/v1/rewards`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ reward_id: rewardId }),
-    });
+//   async redeemReward(rewardId: string): Promise<any> {
+//     const response = await fetch(`${supabaseUrl}/functions/v1/rewards`, {
+//       method: 'POST',
+//       headers: {
+//         'Authorization': `Bearer ${supabaseAnonKey}`,
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify({ reward_id: rewardId }),
+//     });
     
-    if (!response.ok) {
-      throw new Error('Failed to redeem reward');
-    }
+//     if (!response.ok) {
+//       throw new Error('Failed to redeem reward');
+//     }
     
-    return response.json();
-  },
+//     return response.json();
+//   },
 
-  async getAchievements(): Promise<{ user_achievements: UserAchievement[]; all_achievements: Achievement[] }> {
-    const response = await fetch(`${supabaseUrl}/functions/v1/rewards/achievements`, {
-      headers: {
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+//   async getAchievements(): Promise<{ user_achievements: UserAchievement[]; all_achievements: Achievement[] }> {
+//     const response = await fetch(`${supabaseUrl}/functions/v1/rewards/achievements`, {
+//       headers: {
+//         'Authorization': `Bearer ${supabaseAnonKey}`,
+//         'Content-Type': 'application/json',
+//       },
+//     });
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch achievements');
-    }
+//     if (!response.ok) {
+//       throw new Error('Failed to fetch achievements');
+//     }
     
-    return response.json();
-  },
-};
+//     return response.json();
+//   },
+// };

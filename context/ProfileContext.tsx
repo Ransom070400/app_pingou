@@ -44,38 +44,38 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
 
 
 
-  /* Fetch the stored user ID then download the profile from your API */
-  useEffect(() => {
-    let mounted = true;
-    const loadProfile = async () => {
-      console.log('loadProfile called');
-      setLoading(true);
-      try {
-        const storedId = await AsyncStorage.getItem('my-key');
-        console.log('storedId:', storedId);
-        if (!storedId) {
-          console.log('no storedId found');
-          if (mounted) setLoading(false);
-          return;
-        }
+  // /* Fetch the stored user ID then download the profile from your API */
+  // useEffect(() => {
+  //   let mounted = true;
+  //   const loadProfile = async () => {
+  //     console.log('loadProfile called');
+  //     setLoading(true);
+  //     try {
+  //       const storedId = await AsyncStorage.getItem('my-key');
+  //       console.log('storedId:', storedId);
+  //       if (!storedId) {
+  //         console.log('no storedId found');
+  //         if (mounted) setLoading(false);
+  //         return;
+  //       }
 
-        const res = await fetch(`https://pingou-20c437628612.herokuapp.com/users/${storedId}`);
-        console.log('fetch status', res.status);
-        if (!res.ok) throw new Error(`Network response was not ok: ${res.status}`);
-        const data: ProfileType = await res.json();
-        if (mounted) setProfile(data);
-      } catch (err) {
-        console.warn('Could not load profile', err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
+  //       const res = await fetch(`https://pingou-20c437628612.herokuapp.com/users/${storedId}`);
+  //       console.log('fetch status', res.status);
+  //       if (!res.ok) throw new Error(`Network response was not ok: ${res.status}`);
+  //       const data: ProfileType = await res.json();
+  //       if (mounted) setProfile(data);
+  //     } catch (err) {
+  //       console.warn('Could not load profile', err);
+  //     } finally {
+  //       if (mounted) setLoading(false);
+  //     }
+  //   };
 
-    loadProfile();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  //   loadProfile();
+  //   return () => {
+  //     mounted = false;
+  //   };
+  // }, []);
 
   return (
     <ProfileContext.Provider value={{ profile, setProfile, loading }}>
