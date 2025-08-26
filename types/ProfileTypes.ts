@@ -1,16 +1,13 @@
 export interface ProfileType {
-  __v: number;
-  _id: string;
-  created_at: string;
+  user_id: string;
   email: string;
-  firstname: string;
-  lastname: string;
-  updated_at: string;
-  username: string;
-  avatar_url?: string;
+  nickname: string;
+  fullname: string;
+  profile_url?: string;
   instagram?: string;
+  twitter?: string;
   linkedin?: string;
   phone?: string;
-  ping_tokens?: number;
-  twitter?: string;
+  created_at: string;
+  updated_at: string;
 }

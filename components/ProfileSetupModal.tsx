@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Keyboard } from 'react-native';
+import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Keyboard, Alert } from 'react-native';
 import { User, Save} from 'lucide-react-native';
 import { useProfile } from '@/context/ProfileContext';
 import { randomUUID } from 'expo-crypto';
+
 interface ProfileSetupModalProps {
   visible: boolean;
   onComplete: (profileData: any) => void;
@@ -10,7 +11,7 @@ interface ProfileSetupModalProps {
 }
 
 const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ visible, onComplete, email:emailFromLogin }) => {
-  const { setProfile } = useProfile();
+  const { setProfile, session } = useProfile(); // <-- get session
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState(emailFromLogin);
@@ -54,16 +55,23 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({ visible, onComple
 
 
   const handleComplete = async () => {
-    const profileData = {
-      firstname: name || '',
-      lastname: nickname || '',
-      username: nickname || '',
-      email: email || '',
-      // phone,
-      // instagram,
-      // twitter,
-      // linkedin,
-    };
+    // require authenticated session user id
+    const userId = session?.user?.id;
+    if (!userId) {
+      Alert.alert('Not authenticated', 'Cannot create profile without a signed-in user.');
+      return;
+    }
+
+   const profileData = {
+    user_id: userId,                // <- ensure user_id is present
+    email: email.trim(),
+    nickname: nickname.trim(),
+    fullname: name.trim(),
+    phone: phone.trim(),
+    instagram: instagram.trim(),
+    twitter: twitter.trim(),
+    linkedin: linkedin.trim(),
+   };
 
     onComplete(profileData);
   };

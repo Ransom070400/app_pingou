@@ -4,21 +4,24 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CreditCard as Edit3, Camera, Trophy, Users as UsersIcon } from 'lucide-react-native';
 import QRCode from 'react-native-qrcode-svg';
 import * as ImagePicker from 'expo-image-picker';
-import { api } from '@/lib/supabase';
 import EditProfileModal from '@/components/EditProfileModal';
 import { useProfile } from '@/context/ProfileContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getQRCode } from '@/hooks/getQRCode';
+import { supabase } from '@/lib/supabase';
+import { updateProfile } from '@/utils/updateProfile';
+import { savePFP } from '@/utils/savePFP';
 
 export default function ProfileScreen() {
-  const { profile, setProfile } = useProfile();
+  const { profile, session, setProfile } = useProfile();
   const [connectionsCount, setConnectionsCount] = useState(18);
   const [showEditModal, setShowEditModal] = useState(false);
 
+
+
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem('my-key');
-      setProfile(null);
+      supabase.auth.signOut()
       Alert.alert('Logged Out', 'Your session has been cleared.');
     } catch (error) {
       Alert.alert('Error', 'Failed to clear session.');
@@ -26,34 +29,74 @@ export default function ProfileScreen() {
     }
   };
 
+ useEffect(() => {
+   if (profile === null){
+     handleLogout()  
+   }
+ },[profile, session])
+
+  // <-- ADDED GUARD: don't render when profile is null to avoid accessing properties
+  if (!profile) {
+    return (
+      <View style={styles.container}>
+        <Text style={{ textAlign: 'center', marginTop: 120, color: '#666' }}>
+          No profile found — logging out...
+        </Text>
+      </View>
+    );
+  }
+
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') { 
+    if (status !== 'granted') {
       Alert.alert('Permission needed', 'Please grant camera roll permissions to upload a profile picture.');
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+     mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
 
-    if (!result.canceled) {
-      setProfile(prev => ({ ...prev, avatar_url: result.assets[0].uri }));
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const image = result.assets[0];
+      // This is the string we need to pass
+      const uri = image.uri;
+
+      try {
+        // Ensure you are passing ONLY the uri string here
+        setProfile((prev) => (prev ? { ...prev, profile_url: uri } : null));
+        const newUrl = await savePFP(uri);
+        
+        Alert.alert('Success', 'Your profile picture has been updated.');
+      } catch (error) {
+        console.error('Failed to upload image:', error);
+        if (error instanceof Error) {
+          Alert.alert('Upload Failed', error.message);
+        } else {
+          Alert.alert('Upload Failed', 'An unknown error occurred.');
+        }
+      }
     }
   };
 
-  if (profile === null){
-    return <Text style={{ justifyContent: "center", alignItems: "center"}}>Loading...</Text>;
-  }
+  // if (profile === null){
+  //   return <Text style={{ justifyContent: "center", alignItems: "center"}}>Loading...</Text>;
+  // }
 
   const ProfileImage = () => (
     <View style={styles.profileImageContainer}>
       <View style={styles.profileImageShadow}>
-        {profile.avatar_url ? (
-          <Image source={{ uri: profile.avatar_url }} style={styles.profileImage} />
+        {profile.profile_url ? (
+         <Image
+            key={profile.profile_url} // Forces the component to re-mount
+            source={{
+              uri: profile.profile_url,
+            }}
+            style={styles.profileImage}
+          />
         ) : (
           <LinearGradient
             colors={['#f8f9fa', '#e9ecef']}
@@ -62,8 +105,7 @@ export default function ProfileScreen() {
 
          {/* Updated ProfileImage component */}
             <Text style={styles.profileInitials}>
-              {(profile.firstname || '').charAt(0).toUpperCase()}
-              {(profile.lastname || '').charAt(0).toUpperCase()}
+              {(profile.fullname || '').charAt(0).toUpperCase()}
             </Text>
           </LinearGradient>
         )}
@@ -80,9 +122,9 @@ export default function ProfileScreen() {
         <View style={styles.header}>
           <ProfileImage />
           <Text style={styles.name}>
-            {profile.firstname} {profile.lastname}
+            {profile.fullname}
           </Text>
-          <Text style={styles.nickname}>"@{profile.username}"</Text>
+          <Text style={styles.nickname}>"@{profile.nickname}"</Text>
           
           <TouchableOpacity 
             style={styles.editButton}
@@ -101,7 +143,7 @@ export default function ProfileScreen() {
               <View style={styles.statIconContainer}>
                 <Trophy size={24} color="#FFD700" />
               </View>
-              <Text style={styles.statValue}>{profile.ping_tokens}</Text>
+              <Text style={styles.statValue}>0</Text>
               <Text style={styles.statLabel}>Ping Tokens</Text>
             </View>
             <View style={styles.statDivider} />
@@ -120,7 +162,7 @@ export default function ProfileScreen() {
           <View style={styles.qrContainer}>
             <View style={styles.qrCard}>
               <QRCode
-                value={profile._id}
+                value={profile.user_id}
                 size={180}
                 backgroundColor="#FFFFFF"
                 color="#000000"
@@ -166,7 +208,7 @@ export default function ProfileScreen() {
         </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Delete Stored ID (Logout)</Text>
+          <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
 
         <View style={styles.bottomSpacing} />
@@ -177,7 +219,7 @@ export default function ProfileScreen() {
         profile={profile}
         onClose={() => setShowEditModal(false)}
         onSave={(updatedProfile) => {
-          setProfile(updatedProfile);
+          updateProfile(session?.user.id || "", updatedProfile)
           setShowEditModal(false);
         }}
       />

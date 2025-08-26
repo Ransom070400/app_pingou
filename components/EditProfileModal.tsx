@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { X, Save } from 'lucide-react-native';
+import { ProfileChanges } from '@/utils/updateProfile';
+import { ProfileType } from '@/types/ProfileTypes';
 
 interface EditProfileModalProps {
   visible: boolean;
-  profile: any;
+  profile: ProfileType;
   onClose: () => void;
   onSave: (profile: any) => void;
 }
@@ -21,7 +23,7 @@ export default function EditProfileModal({ visible, profile, onClose, onSave }: 
 
   // Sync state with incoming profile prop
   useEffect(() => {
-    setName(profile.name || '');
+    setName(profile.fullname || '');
     setNickname(profile.nickname || '');
     setEmail(profile.email || '');
     setPhone(profile.phone || '');
@@ -31,9 +33,8 @@ export default function EditProfileModal({ visible, profile, onClose, onSave }: 
   }, [profile, visible]);
 
   const handleSave = () => {
-    const updatedProfile = {
-      ...profile,
-      name,
+    const updatedProfile:ProfileChanges = {
+      fullname:name,
       nickname,
       email,
       phone,
