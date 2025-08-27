@@ -1,65 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Users, Instagram, Twitter, Linkedin, Mail, Phone, Calendar } from 'lucide-react-native';
+import { Users } from 'lucide-react-native';
 import ConnectionDetailModal from '@/components/ConnectionDetailModal';
+import { useRealtimeConnections } from '@/context/RealtimeProvider';
+import { ProfileType } from '@/types/ProfileTypes';
 
 export default function ConnectionsScreen() {
-  const [connections, setConnections] = useState([
-    {
-      id: '1',
-      name: 'Alice Johnson',
-      nickname: 'AJ',
-      email: 'alice@example.com',
-      phone: '+1 (555) 234-5678',
-      instagram: '@alicejohnson',
-      twitter: '@alice_j',
-      linkedin: 'linkedin.com/in/alicejohnson',
-      avatar_url: null,
-      connected_at: '2024-01-15T10:30:00Z',
-      ping_tokens_earned: 1,
-    },
-    {
-      id: '2',
-      name: 'Bob Smith',
-      nickname: 'Bobby',
-      email: 'bob@example.com',
-      phone: '+1 (555) 345-6789',
-      instagram: '@bobsmith',
-      twitter: '@bob_smith',
-      linkedin: 'linkedin.com/in/bobsmith',
-      avatar_url: null,
-      connected_at: '2024-01-14T15:45:00Z',
-      ping_tokens_earned: 1,
-    },
-    {
-      id: '3',
-      name: 'Carol Davis',
-      nickname: 'CD',
-      email: 'carol@example.com',
-      phone: '+1 (555) 456-7890',
-      instagram: '@caroldavis',
-      twitter: '@carol_d',
-      linkedin: 'linkedin.com/in/caroldavis',
-      avatar_url: null,
-      connected_at: '2024-01-13T09:15:00Z',
-      ping_tokens_earned: 1,
-    },
-  ]);
-
-  const [selectedConnection, setSelectedConnection] = useState(null);
+  const [selectedConnection, setSelectedConnection] = useState<ProfileType | undefined>();
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const { connections } = useRealtimeConnections();
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  const ConnectionCard = ({ connection }) => (
+  const ConnectionCard = ({ connection }: { connection: ProfileType }) => (
     <TouchableOpacity
       style={styles.connectionCard}
       onPress={() => {
@@ -69,38 +21,34 @@ export default function ConnectionsScreen() {
     >
       <View style={styles.connectionCardContent}>
         <View style={styles.avatarContainer}>
-          {connection.avatar_url ? (
-            <Image source={{ uri: connection.avatar_url }} style={styles.avatar} />
+          {connection.profile_url ? (
+            <Image source={{ uri: connection.profile_url }} style={styles.avatar} />
           ) : (
             <LinearGradient
               colors={['#f8f9fa', '#e9ecef']}
               style={styles.avatar}
             >
               <Text style={styles.avatarInitials}>
-                // Before (line 80):
-                {connection.name.split(' ').map(n => n[0]).join('')}
-                
-                // After:
-                {(connection.name || '').split(' ').map(n => n[0] || '').join('')}
+                {(connection.fullname || '').split(' ').map(n => n[0] || '').join('')}
               </Text>
             </LinearGradient>
           )}
         </View>
 
         <View style={styles.connectionInfo}>
-          <Text style={styles.connectionName}>{connection.name}</Text>
+          <Text style={styles.connectionName}>{connection.fullname}</Text>
           <Text style={styles.connectionNickname}>"{connection.nickname}"</Text>
-          <View style={styles.connectionMeta}>
+          {/* <View style={styles.connectionMeta}>
             <Calendar size={14} color="#666666" />
-            <Text style={styles.connectionDate}>Connected {formatDate(connection.connected_at)}</Text>
-          </View>
+            <Text style={styles.connectionDate}>Connected {formatDate(connection.updated_at)}</Text>
+          </View> */}
         </View>
 
-        <View style={styles.connectionActions}>
+        {/* <View style={styles.connectionActions}>
           <View style={styles.pingBadge}>
             <Text style={styles.pingText}>+{connection.ping_tokens_earned}</Text>
           </View>
-        </View>
+        </View> */}
       </View>
     </TouchableOpacity>
   );
@@ -123,7 +71,7 @@ export default function ConnectionsScreen() {
         <View style={styles.connectionsContainer}>
           {connections.length > 0 ? (
             connections.map((connection) => (
-              <ConnectionCard key={connection.id} connection={connection} />
+              <ConnectionCard key={connection.updated_at} connection={connection} />
             ))
           ) : (
             <View style={styles.emptyState}>

@@ -3,14 +3,17 @@ import { Stack } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ProfileProvider } from '@/context/ProfileContext';
 import AuthGate from '@/components/AuthGate';
+import { RealtimeProvider } from '@/context/RealtimeProvider';
 
 export default function RootLayout() {
   useFrameworkReady();
 
   return (
     <ProfileProvider>
-      <AuthGate />
-      <StatusBar style="auto" />
+      <RealtimeProvider>
+        <AuthGate />
+        <StatusBar style="auto" />
+      </RealtimeProvider>
     </ProfileProvider>
   );
 }

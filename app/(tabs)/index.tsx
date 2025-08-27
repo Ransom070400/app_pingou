@@ -124,9 +124,9 @@ export default function ProfileScreen() {
           <Text style={styles.name}>
             {profile.fullname}
           </Text>
-          <Text style={styles.nickname}>"@{profile.nickname}"</Text>
-          
-          <TouchableOpacity 
+          <Text style={styles.nickname}>{profile.nickname}</Text>
+
+          <TouchableOpacity
             style={styles.editButton}
             onPress={() => setShowEditModal(true)}
           >

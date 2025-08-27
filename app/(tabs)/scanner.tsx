@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { QrCode, Flashlight, FlashlightOff } from 'lucide-react-native';
 import SuccessAnimation from '@/components/SuccessAnimation';
 import FetchedUser from '@/components/fetchedUser';
 import { getProfile } from '@/hooks/getProfile';
 import { ProfileType } from '@/types/ProfileTypes';
+import { supabase } from '@/lib/supabase';
+
+import { router } from 'expo-router';
 
 export default function ScannerScreen() {
   const [facing, setFacing] = useState<CameraType>('back');
@@ -13,6 +16,7 @@ export default function ScannerScreen() {
   const [flashlight, setFlashlight] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [fetchedProfile, setFetchedProfile] = useState<ProfileType | null>(null);
+  const [scanned, setScanned] = useState(false);
 
 
   if (!permission) {
@@ -43,26 +47,65 @@ export default function ScannerScreen() {
   }
 
   const handleBarCodeScanned = async ({ data }: { data: string }) => {
-    const profile =  await getProfile(data);
-    setFetchedProfile(profile);
-    setShowSuccess(true);
-    
+    if (scanned) {
+      return;
+    }
+    setScanned(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Prevent connecting with oneself
+      if (user.id === data) {
+        router.replace("/(tabs)")
+        return; 
+      }
+
+      // Create connection in the database
+      const { error } = await supabase
+        .from('connections')
+        .insert({ sender_id: user.id, receiver_id: data });
+
+      // Error code '23505' is for unique constraint violation.
+      // We can ignore it, as it just means the connection already exists.
+      if (error && error.code !== '23505') {
+        throw error;
+      }
+
+      // Fetch profile to show the success screen
+      // data here refers to the scanned id.
+      const profile = await getProfile(data);
+      setFetchedProfile(profile);
+      if (profile){
+        setShowSuccess(true);
+      }
+
+    } catch (error) {
+      console.error('Error handling barcode scan:', error);
+      // Optionally, show an error message to the user here
+    } finally {
+      // Allow scanning again after a delay, even if it failed
+      setTimeout(() => setScanned(false), 2000);
+    }
   };
 
   const toggleFlashlight = () => {
     setFlashlight(!flashlight);
   };
 
-  if (showSuccess) {
+  if (showSuccess && fetchedProfile) {
     return (
-      <FetchedUser
-       user={fetchedProfile!} 
-       onClose={() => setShowSuccess(false)}
-      />
-      // <SuccessAnimation 
-      //   onComplete={() => setShowSuccess(false)}
-      //   connectionData={scannedData}
-      // />
+      <View style={{ flex: 1 }}>
+       
+        <FetchedUser
+         user={fetchedProfile} 
+         onClose={() => {
+           setShowSuccess(false);
+           setFetchedProfile(null);
+         }}
+        />
+      </View>
     );
   }
 

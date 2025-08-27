@@ -1,13 +1,21 @@
-import { ProfileType } from "@/context/ProfileContext";
+import { supabase } from "@/lib/supabase";
+import { ProfileType } from "@/types/ProfileTypes";
 
 export async function getProfile(userId: string) : Promise<ProfileType | null> {
-  const BASE_URL = 'https://pingou-20c437628612.herokuapp.com';
   try {
-    const res = await fetch(`${BASE_URL}/users/${userId}`);
-    if (!res.ok) throw new Error('Network response was not ok');
-    return await res.json();
+   const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
   } catch (err) {
-    console.warn('Could not fetch profile', err);
+    console.warn('Could not fetch profile from Supabase', err);
     return null;
   }
 }

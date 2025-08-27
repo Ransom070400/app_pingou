@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { ProfileType } from '../types/ProfileTypes';
+import { Confetti } from 'react-native-fast-confetti';
 
 type FetchedUserModalProps = {
   visible?: boolean;
@@ -16,6 +17,11 @@ const FetchedUserModal: React.FC<FetchedUserModalProps> = ({ visible, user, onCl
     onRequestClose={onClose}
     transparent={false}
   >
+     <Confetti 
+     fallDuration={6800}
+     isInfinite={false}
+     
+     />
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>User Profile</Text>
@@ -25,16 +31,22 @@ const FetchedUserModal: React.FC<FetchedUserModalProps> = ({ visible, user, onCl
       </View>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.name}>{user.firstname} {user.lastname}</Text>
-          <Text style={styles.username}>@{user.username}</Text>
+          {/* I'm assuming the user object has an 'avatar_url' property */}
+          {user.profile_url && (
+            <Image
+              source={{ uri: user.profile_url }}
+              style={styles.avatar}
+            />
+          )}
+          <Text style={styles.name}>{user.fullname}</Text>
+          <Text style={styles.username}>@{user.nickname}</Text>
           <Text style={styles.email}>{user.email}</Text>
           <Text style={styles.created}>Joined: {new Date(user.created_at).toLocaleDateString()}</Text>
-          {user.avatar_url && <Text style={styles.field}>Avatar: {user.avatar_url}</Text>}
           {user.instagram && <Text style={styles.field}>Instagram: {user.instagram}</Text>}
           {user.twitter && <Text style={styles.field}>Twitter: {user.twitter}</Text>}
           {user.linkedin && <Text style={styles.field}>LinkedIn: {user.linkedin}</Text>}
           {user.phone && <Text style={styles.field}>Phone: {user.phone}</Text>}
-          {user.ping_tokens !== undefined && <Text style={styles.field}>Ping Tokens: {user.ping_tokens}</Text>}
+          {/* {user.ping_tokens !== undefined && <Text style={styles.field}>Ping Tokens: {user.ping_tokens}</Text>} */}
         </View>
       </ScrollView>
     </View>
@@ -89,15 +101,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
   },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignSelf: 'center',
+    marginBottom: 20,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
   name: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 8,
+    textAlign: 'center',
   },
   username: {
     fontSize: 16,
     color: '#555',
     marginBottom: 8,
+    textAlign: 'center',
   },
   email: {
     fontSize: 14,

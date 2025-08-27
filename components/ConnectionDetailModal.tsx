@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Image, Linking } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Image, Linking, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { X, Instagram, Twitter, Linkedin, Mail, Phone, ExternalLink } from 'lucide-react-native';
+import { ProfileType } from '@/types/ProfileTypes';
 
 interface ConnectionDetailModalProps {
   visible: boolean;
-  connection: any;
+  connection: ProfileType;
   onClose: () => void;
 }
 
@@ -67,9 +68,9 @@ export default function ConnectionDetailModal({ visible, connection, onClose }: 
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="pageSheet"
+      presentationStyle="fullScreen"
     >
-      <View style={styles.container}>
+      <ScrollView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <X size={24} color="#000000" />
@@ -81,8 +82,8 @@ export default function ConnectionDetailModal({ visible, connection, onClose }: 
         <View style={styles.content}>
           <View style={styles.profileSection}>
             <View style={styles.avatarContainer}>
-              {connection.avatar_url ? (
-                <Image source={{ uri: connection.avatar_url }} style={styles.avatar} />
+              {connection.profile_url ? (
+                <Image source={{ uri: connection.profile_url }} style={styles.avatar} />
               ) : (
                 <LinearGradient
                   colors={['#f8f9fa', '#e9ecef']}
@@ -90,22 +91,22 @@ export default function ConnectionDetailModal({ visible, connection, onClose }: 
                 >
                   <Text style={styles.avatarInitials}>
                     // Similar fix needed here
-                    {(connection.name || '').split(' ').map(n => n[0] || '').join('')}
+                    {(connection.fullname || '').split(' ').map(n => n[0] || '').join('')}
                   </Text>
                 </LinearGradient>
               )}
             </View>
-            
-            <Text style={styles.name}>{connection.name}</Text>
+
+            <Text style={styles.name}>{connection.fullname}</Text>
             <Text style={styles.nickname}>"{connection.nickname}"</Text>
             
             <View style={styles.connectionInfo}>
-              <Text style={styles.connectionDate}>
-                Connected on {formatDate(connection.connected_at)}
-              </Text>
-              <View style={styles.pingBadge}>
+              {/* <Text style={styles.connectionDate}>
+                Connected on {formatDate(connection.updated_at)}
+              </Text> */}
+              {/* <View style={styles.pingBadge}>
                 <Text style={styles.pingText}>Earned +{connection.ping_tokens_earned} Ping Token</Text>
-              </View>
+              </View> */}
             </View>
           </View>
 
@@ -159,7 +160,7 @@ export default function ConnectionDetailModal({ visible, connection, onClose }: 
             </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
     </Modal>
   );
 }
