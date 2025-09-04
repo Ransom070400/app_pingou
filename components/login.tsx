@@ -1,7 +1,20 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Animated, Easing } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Animated,
+  Easing,
+  Alert,
+} from 'react-native';
 import { Mail, ArrowRight, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { supabase } from '../lib/supabase';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { StatusBar } from 'expo-status-bar';
 
 function DancingPenguin() {
   // Animation hooks for bounce and rotate
@@ -76,8 +89,18 @@ function DancingPenguin() {
         {/* Belly */}
         <View style={styles.penguinBelly} />
         {/* Wings */}
-        <View style={[styles.penguinWing, { left: -16, transform: [{ rotate: '-18deg' }] }]} />
-        <View style={[styles.penguinWing, { right: -16, left: undefined, transform: [{ rotate: '18deg' }] }]} />
+        <View
+          style={[
+            styles.penguinWing,
+            { left: -16, transform: [{ rotate: '-18deg' }] },
+          ]}
+        />
+        <View
+          style={[
+            styles.penguinWing,
+            { right: -16, left: undefined, transform: [{ rotate: '18deg' }] },
+          ]}
+        />
         {/* Feet */}
         <View style={[styles.penguinFoot, { left: 12 }]} />
         <View style={[styles.penguinFoot, { right: 12 }]} />
@@ -93,7 +116,12 @@ export default function LoginScreen({
 }: {
   onLogin: (email: string) => void;
   onSetupProfile?: (email: string) => void;
-  onAuthResult?: (r: { success: boolean; needsProfile: boolean; email: string; error?: string }) => void; // NEW
+  onAuthResult?: (r: {
+    success: boolean;
+    needsProfile: boolean;
+    email: string;
+    error?: string;
+  }) => void; // NEW
 }) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -101,50 +129,132 @@ export default function LoginScreen({
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+
+  const isIOS = Platform.OS === 'ios';
+
+  function getError(e: unknown) {
+    if (e instanceof Error) return e;
+    if (typeof e === 'string') return e;
+    return 'Something went wrong.';
+  }
+
+  // NEW: Apple sign-in handler placed inside component so button can be rendered in layout
+  async function handleAppleSignIn() {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (!credential.identityToken) throw new Error('No identityToken.');
+
+      const {
+        error: appleError,
+        data: { user },
+      } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: credential.identityToken,
+      });
+
+      if (appleError) {
+        throw appleError;
+      }
+
+      // Notify parent of successful auth. If email not available, pass empty string.
+      const userEmail = user?.email ?? '';
+      onLogin(userEmail);
+      onAuthResult?.({
+        success: true,
+        needsProfile: false,
+        email: userEmail,
+      });
+    } catch (e) {
+      if (getError(e) === 'ERR_REQUEST_CANCELED') {
+        Alert.alert('Sign-in canceled', 'You have canceled the sign-in process.');
+      } else {
+        console.log("Apple Sign-in error", getError(e).toString());
+        Alert.alert('Sign-in error', getError(e).toString());
+      }
+      onAuthResult?.({
+        success: false,
+        needsProfile: false,
+        email: '',
+        error: getError(e).toString(),
+      });
+    }
+  }
+
   const handleLogin = async () => {
     if (!email.trim() || !password) return;
 
     setIsLoading(true);
     setError(null);
     try {
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+      const { data: signInData, error: signInError } =
+        await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
 
       if (!signInError && signInData?.user) {
         onLogin(email.trim());
-        onAuthResult?.({ success: true, needsProfile: false, email: email.trim() }); // NEW
+        onAuthResult?.({
+          success: true,
+          needsProfile: false,
+          email: email.trim(),
+        }); // NEW
         return;
       }
 
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-      });
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+        });
 
       if (!signUpError && signUpData?.user) {
         onSetupProfile?.(email.trim());
-        onAuthResult?.({ success: true, needsProfile: true, email: email.trim() }); // NEW
+        onAuthResult?.({
+          success: true,
+          needsProfile: true,
+          email: email.trim(),
+        }); // NEW
         return;
       }
 
-      const message = signUpError?.message || signInError?.message || 'Authentication failed.';
+      const message =
+        signUpError?.message ||
+        signInError?.message ||
+        'Authentication failed.';
       setError(message);
-      onAuthResult?.({ success: false, needsProfile: false, email: email.trim(), error: message }); // NEW
+      onAuthResult?.({
+        success: false,
+        needsProfile: false,
+        email: email.trim(),
+        error: message,
+      }); // NEW
     } catch (e: any) {
       const message = e?.message ?? 'Something went wrong.';
       setError(message);
-      onAuthResult?.({ success: false, needsProfile: false, email: email.trim(), error: message }); // NEW
+      onAuthResult?.({
+        success: false,
+        needsProfile: false,
+        email: email.trim(),
+        error: message,
+      }); // NEW
     } finally {
       setIsLoading(false);
     }
   };
 
+  // removed early return for iOS so the full layout renders on all platforms
   return (
     <View style={styles.container}>
+        <StatusBar style="dark" />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={isIOS ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <View style={styles.content}>
@@ -190,31 +300,61 @@ export default function LoginScreen({
                 autoComplete="password"
                 textContentType="password"
               />
-              <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.passwordToggle}>
-                {showPassword ? <EyeOff size={20} color="#666666" /> : <Eye size={20} color="#666666" />}
+              <TouchableOpacity
+                onPress={() => setShowPassword((v) => !v)}
+                style={styles.passwordToggle}
+              >
+                {showPassword ? (
+                  <EyeOff size={20} color="#666666" />
+                ) : (
+                  <Eye size={20} color="#666666" />
+                )}
               </TouchableOpacity>
             </View>
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
             <TouchableOpacity
-              style={[styles.loginButton, (!email.trim() || !password) && styles.loginButtonDisabled]}
+              style={[
+                styles.loginButton,
+                (!email.trim() || !password) && styles.loginButtonDisabled,
+              ]}
               onPress={handleLogin}
               disabled={!email.trim() || !password || isLoading}
             >
-              <Text style={[styles.loginButtonText, (!email.trim() || !password) && styles.loginButtonTextDisabled]}>
+              <Text
+                style={[
+                  styles.loginButtonText,
+                  (!email.trim() || !password) &&
+                    styles.loginButtonTextDisabled,
+                ]}
+              >
                 {isLoading ? 'Signing in...' : 'Continue'}
               </Text>
-              <ArrowRight 
-                size={20} 
-                color={email.trim() && password ? "#FFFFFF" : "#999999"} 
+              <ArrowRight
+                size={20}
+                color={email.trim() && password ? '#FFFFFF' : '#999999'}
               />
             </TouchableOpacity>
+
+            {/* NEW: Apple sign-in rendered inside form so it fits with layout */}
+            {isIOS && (
+              <View style={styles.appleButtonContainer}>
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                  cornerRadius={12}
+                  style={styles.appleButton}
+                  onPress={handleAppleSignIn}
+                />
+              </View>
+            )}
           </View>
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              By continuing, you agree to our Terms of Service and Privacy Policy
+              By continuing, you agree to our Terms of Service and Privacy
+              Policy
             </Text>
           </View>
         </View>
@@ -223,9 +363,9 @@ export default function LoginScreen({
   );
 }
 
-const penguinColor = "#000";
-const penguinBeakColor = "#FF8C00";
-const penguinFootColor = "#FFB347";
+const penguinColor = '#000';
+const penguinBeakColor = '#FF8C00';
+const penguinFootColor = '#FFB347';
 
 const styles = StyleSheet.create({
   container: {
@@ -393,6 +533,18 @@ const styles = StyleSheet.create({
   loginButtonTextDisabled: {
     color: '#999999',
   },
+
+  // NEW Apple button styles to match layout
+  appleButtonContainer: {
+    marginTop: 18,
+    alignItems: 'center',
+  },
+  appleButton: {
+    width: '100%',
+    height: 48,
+    borderRadius: 12,
+  },
+
   footer: {
     alignItems: 'center',
   },

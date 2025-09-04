@@ -11,19 +11,22 @@ import { getQRCode } from '@/hooks/getQRCode';
 import { supabase } from '@/lib/supabase';
 import { updateProfile } from '@/utils/updateProfile';
 import { savePFP } from '@/utils/savePFP';
+import { router } from 'expo-router';
+import { useRealtimeConnections } from '@/context/RealtimeProvider';
 
 export default function ProfileScreen() {
   const { profile, session, setProfile } = useProfile();
-  const [connectionsCount, setConnectionsCount] = useState(18);
   const [showEditModal, setShowEditModal] = useState(false);
+  const {connections} = useRealtimeConnections()
 
 
 
   const handleLogout = async () => {
     try {
       supabase.auth.signOut()
+      router.replace("/")
       Alert.alert('Logged Out', 'Your session has been cleared.');
-    } catch (error) {
+    } catch (error) {[]
       Alert.alert('Error', 'Failed to clear session.');
       console.error('Failed to remove auth key from storage', error);
     }
@@ -151,7 +154,7 @@ export default function ProfileScreen() {
               <View style={styles.statIconContainer}>
                 <UsersIcon size={24} color="#000000" />
               </View>
-              <Text style={styles.statValue}>{connectionsCount}</Text>
+              <Text style={styles.statValue}>{connections.length}</Text>
               <Text style={styles.statLabel}>Connections</Text>
             </View>
           </View>
